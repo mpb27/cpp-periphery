@@ -4,17 +4,27 @@
  * License: MIT
  *
  * Notes:
- *   1) Why use size_t for offset : https://stackoverflow.com/questions/10634629/
+ *   1) Why use size_t for offset :
+ *          https://stackoverflow.com/questions/10634629/
+ *   2) Which exception should be throw :
+ *          https://stackoverflow.com/questions/12171377/
+ *   3) MMAP info:
+ *          http://man7.org/linux/man-pages/man2/mmap.2.html
+ *          https://stackoverflow.com/questions/45972/mmap-vs-reading-blocks
+ *   4) Include headers:
+ *          https://stackoverflow.com/a/2029106/953414
  */
 
 #ifndef PERIPHERY_MMIO_HPP
 #define PERIPHERY_MMIO_HPP
 
+// C++11 includes:
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <system_error>
 
+// POSIX 2008 Headers:
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -23,7 +33,7 @@ namespace periphery {
 
 class mmio {
 public:
-    // .. Constructor / Destructor ...
+    // ... constructor / destructor ...
     mmio(uintptr_t base, size_t size);
     ~mmio();
     // ... disable copy-constructor and copy assignment ...
