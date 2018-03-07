@@ -3,7 +3,7 @@ CXX=arm-linux-gnueabihf-g++
 RM=rm -rf
 
 LIB = periphery.a
-SRCS = src/periphery/mmio.cpp  src/periphery/spi.cpp  src/periphery/serial.cpp
+SRCS = src/periphery/mmio.cpp  src/periphery/spi.cpp  src/periphery/serial.cpp  src/periphery/i2c.cpp
 
 SRCDIR = src/periphery
 OBJDIR = obj
