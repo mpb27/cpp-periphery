@@ -11,12 +11,12 @@ int main()
     //unsigned char tmp[256];
 
     periphery::Spi spi("/dev/spi1.1",
-        periphery::Spi::Mode0,
-        periphery::Spi::MsbFirst,
+        periphery::Spi::Mode::Zero,
+        periphery::Spi::BitOrder::MsbFirst,
         1000000);
 
-    spi.mode(periphery::Spi::Mode3);
-    spi.bit_order(periphery::Spi::LsbFirst);
+    spi.mode(periphery::Spi::Mode::Three);
+    spi.bit_order(periphery::Spi::BitOrder::LsbFirst);
     spi.speed(250000);
     spi.bits_per_word(16);
 
