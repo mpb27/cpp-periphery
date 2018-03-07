@@ -51,6 +51,9 @@ public:
     void     set16(size_t offset, uint16_t mask) const { write16(offset, read16(offset) | mask); }
     void     set8 (size_t offset, uint8_t  mask) const { write8(offset, read8(offset) | mask); }
 
+    // ... pointer, should not be used after Mmio is destroyed, ensure using? ...
+    void* ptr() const { return static_cast<void*>(m_ptr + (m_base - m_aligned_base)); }
+
 private:
     uintptr_t m_base;
     uintptr_t m_aligned_base;
