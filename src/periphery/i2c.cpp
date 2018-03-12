@@ -48,6 +48,8 @@ I2C::I2C(const std::string& path) {
         close(fd_);
         throw std::runtime_error("I2C not supported on ???");
     }
+
+    path_ = path;
 }
 
 
@@ -82,44 +84,59 @@ I2C::Message I2C::Message::read(size_t len) {
     return msg;
 }
 
+template <typename ForwardIt>
+void I2C::transfer(uint16_t addr, ForwardIt begin, ForwardIt end) const
+{
+    if (begin == end) {
+        return;
+    }
 
-std::vector<I2C::Message> I2C::transfer(uint16_t addr, std::vector<Message>& messages) const {
     // ... create i2c_msg structure needed by linux call ...
-    std::unique_ptr<i2c_msg[]> p(new i2c_msg[messages.size()]);
-    for (size_t i = 0; i < messages.size(); i++) {
+    size_t count = end - begin;
+    std::unique_ptr<i2c_msg[]> p(new i2c_msg[count]);
+    for (size_t i = 0 ; i < count; ++i) {
+        auto& m = (Message&) *begin++;
         p[i].addr  = addr;
-        p[i].flags = messages[i].flags;
-        p[i].len   = messages[i].data.size();
-        p[i].buf   = messages[i].data.data();
+        p[i].flags = m.flags;
+        p[i].len   = m.data.size();
+        p[i].buf   = m.data.data();
     }
 
     // ... create transfer descriptor ...
     i2c_rdwr_ioctl_data i2c_rdwr_data;
     memset(&i2c_rdwr_data, 0, sizeof(i2c_rdwr_ioctl_data));
     i2c_rdwr_data.msgs = p.get();
-    i2c_rdwr_data.nmsgs = messages.size();
+    i2c_rdwr_data.nmsgs = count;
 
     int error = ioctl(fd_, I2C_RDWR, &i2c_rdwr_data);
     if (error < 0) {
-
+        throw std::system_error(EFAULT, std::system_category());
     }
-
-    return messages;
 }
 
 
-std::vector<I2C::Message> I2C::transfer(uint16_t addr, std::initializer_list<Message> messages) const {
-    // lazy way for now
-    std::vector<Message> messages2(messages);
-    return transfer(addr, messages2);
+void I2C::transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const
+{
+    transfer(addr, messages.begin(), messages.end());
 }
 
 
-
-I2C::Message I2C::transfer(uint16_t addr, const Message& message) const  {
-    transfer(addr, {message} );
-    return message;
+template <class... Messages>
+void I2C::transfer(uint16_t addr, Messages&&... messages) const
+{
+    transfer(addr, { messages... });
 }
 
+
+void I2C::transfer(uint16_t addr, Message& message) const
+{
+    transfer(addr, { message } );
+}
+
+
+std::string I2C::toString() const
+{
+    return "I2C (" + path_ + ")";
+}
 
 } // ... namespace periphery ...

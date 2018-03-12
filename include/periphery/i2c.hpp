@@ -27,19 +27,25 @@ namespace periphery {
 
 class I2C {
 public:
+    class Message;  // ... forward define ...
+
     // ... constructor / destructor ...
     I2C(const std::string& path);
     ~I2C();
     // ... disable copy-constructor and copy assignment ...
     I2C(const I2C&) = delete;
     I2C& operator=(const I2C&) = delete;
-    // ... primary functions ...
 
-    class Message;
-    //void transfer(uint16_t addr, Message message) const;
-    Message transfer(uint16_t addr, const Message& message) const;
-    std::vector<Message>  transfer(uint16_t addr, std::initializer_list<Message> messages) const;
-    std::vector<Message>  transfer(uint16_t addr, std::vector<Message>& messages) const;
+    // ... primary functions ...
+    void transfer(uint16_t addr, Message& message) const;
+    void transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const;
+    template <typename ForwardIt>
+    void transfer(uint16_t addr, ForwardIt begin, ForwardIt end) const;
+    template <class... Messages>
+    void transfer(uint16_t addr, Messages&&... messages) const;
+
+    // ... extra ...
+    std::string toString() const;
 
     class Message {
     public:
@@ -57,6 +63,7 @@ public:
     };
 private:
     int fd_;
+    std::string path_;
 };
 
 } // ... namespace periphery ...
