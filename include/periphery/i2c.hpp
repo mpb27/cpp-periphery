@@ -16,6 +16,7 @@
 #define PERIPHERY_I2C_HPP
 
 
+#include <array>
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
@@ -37,12 +38,9 @@ public:
     I2C& operator=(const I2C&) = delete;
 
     // ... primary functions ...
-    void transfer(uint16_t addr, Message& message) const;
+    template <class... Messages>  void transfer(uint16_t addr, Messages&&... messages) const;
+    template <typename ForwardIt> void transfer(uint16_t addr, ForwardIt first, ForwardIt last) const;
     void transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const;
-    template <typename ForwardIt>
-    void transfer(uint16_t addr, ForwardIt begin, ForwardIt end) const;
-    template <class... Messages>
-    void transfer(uint16_t addr, Messages&&... messages) const;
 
     // ... extra ...
     std::string toString() const;
@@ -64,7 +62,30 @@ public:
 private:
     int fd_;
     std::string path_;
+    template <typename ForwardIt> void transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const;
+    void transfer(uint16_t addr, std::vector<std::reference_wrapper<Message>>& messages) const;
 };
+
+
+template <class... Messages>
+inline void I2C::transfer(uint16_t addr, Messages&&... messages) const
+{
+    transfer(addr, { messages... });
+}
+
+
+template <typename ForwardIt>
+inline void I2C::transfer(uint16_t addr, ForwardIt first, ForwardIt last) const
+{
+    // traverse the container and get a vector of references to messages
+    std::vector<std::reference_wrapper<Message>> v;
+    for (auto it = first; it != last; ++it) {
+        v.push_back(std::ref(*it));
+    }
+
+    transfer(addr, v);
+}
+
 
 } // ... namespace periphery ...
 

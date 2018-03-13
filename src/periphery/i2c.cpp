@@ -84,18 +84,27 @@ I2C::Message I2C::Message::read(size_t len) {
     return msg;
 }
 
-template <typename ForwardIt>
-void I2C::transfer(uint16_t addr, ForwardIt begin, ForwardIt end) const
-{
-    if (begin == end) {
-        return;
-    }
 
+void I2C::transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const
+{
+    transfer_impl(addr, messages.begin(), messages.end());
+}
+
+
+void I2C::transfer(uint16_t addr, std::vector<std::reference_wrapper<Message>>& messages) const
+{
+    transfer_impl(addr, messages.begin(), messages.end());
+}
+
+
+template <typename ForwardIt>
+void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
+{
     // ... create i2c_msg structure needed by linux call ...
-    size_t count = end - begin;
+    size_t count = last - first;
     std::unique_ptr<i2c_msg[]> p(new i2c_msg[count]);
     for (size_t i = 0 ; i < count; ++i) {
-        auto& m = (Message&) *begin++;
+        auto& m = (Message&) *first++;
         p[i].addr  = addr;
         p[i].flags = m.flags;
         p[i].len   = m.data.size();
@@ -112,25 +121,6 @@ void I2C::transfer(uint16_t addr, ForwardIt begin, ForwardIt end) const
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
-}
-
-
-void I2C::transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const
-{
-    transfer(addr, messages.begin(), messages.end());
-}
-
-
-template <class... Messages>
-void I2C::transfer(uint16_t addr, Messages&&... messages) const
-{
-    transfer(addr, { messages... });
-}
-
-
-void I2C::transfer(uint16_t addr, Message& message) const
-{
-    transfer(addr, { message } );
 }
 
 
