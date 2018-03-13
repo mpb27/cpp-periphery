@@ -38,8 +38,12 @@ public:
     I2C& operator=(const I2C&) = delete;
 
     // ... primary functions ...
-    template <class... Messages>  void transfer(uint16_t addr, Messages&&... messages) const;
-    template <typename ForwardIt> void transfer(uint16_t addr, ForwardIt first, ForwardIt last) const;
+    template <class... Messages>
+    void transfer(uint16_t addr, Messages&&... messages) const;
+
+    template <typename ForwardIt>
+    void transfer(uint16_t addr, ForwardIt first, ForwardIt last, typename std::iterator_traits<ForwardIt>::iterator_category* = nullptr) const;
+
     void transfer(uint16_t addr, std::initializer_list<std::reference_wrapper<Message>> messages) const;
 
     // ... extra ...
@@ -62,7 +66,8 @@ public:
 private:
     int fd_;
     std::string path_;
-    template <typename ForwardIt> void transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const;
+    template <typename ForwardIt>
+    void transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const;
     void transfer(uint16_t addr, std::vector<std::reference_wrapper<Message>>& messages) const;
 };
 
@@ -75,7 +80,8 @@ inline void I2C::transfer(uint16_t addr, Messages&&... messages) const
 
 
 template <typename ForwardIt>
-inline void I2C::transfer(uint16_t addr, ForwardIt first, ForwardIt last) const
+inline void I2C::transfer(uint16_t addr, ForwardIt first, ForwardIt last,
+    typename std::iterator_traits<ForwardIt>::iterator_category*) const
 {
     // traverse the container and get a vector of references to messages
     std::vector<std::reference_wrapper<Message>> v;
