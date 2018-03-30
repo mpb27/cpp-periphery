@@ -46,7 +46,7 @@ namespace periphery {
     Mmio::~Mmio() {
         // ... unmap memory...
         if (munmap(m_ptr, m_aligned_size) < 0) {
-            throw std::system_error(EFAULT, std::system_category());
+            // ... never throw from destructor ...
         }
     }
 

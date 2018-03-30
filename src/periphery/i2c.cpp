@@ -28,40 +28,42 @@ namespace periphery {
 //class ReadMessage : public I2C::Message {};
 //class WriteMessage : public I2C::Message {};
 
-I2C::I2C(const std::string& path) {
+I2C::I2C(const std::string& path)
+    : m_path(path)
+{
     // ... open device ...
-    fd_ = open(path.c_str(), O_RDWR);
-    if (fd_ < 0) {
+    m_fd = open(path.c_str(), O_RDWR);
+    if (m_fd < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
 
     // ... query supported functions ...
     unsigned long supported_funcs;
-    if (ioctl(fd_, I2C_FUNCS, &supported_funcs) < 0) {
+    if (ioctl(m_fd, I2C_FUNCS, &supported_funcs) < 0) {
         auto e = std::system_error(EFAULT, std::system_category());
-        close(fd_);
+        close(m_fd);
         throw e;
     }
 
     // ... check that this device has I2C function ...
     if (!(supported_funcs & I2C_FUNC_I2C)) {
-        close(fd_);
+        close(m_fd);
         throw std::runtime_error("I2C not supported on ???");
     }
-
-    path_ = path;
 }
 
 
-I2C::~I2C() {
+I2C::~I2C()
+{
     // ... we can report an error, but should never throw from destructor ...
-    if (close(fd_) < 0) {
+    if (close(m_fd) < 0) {
         // ... do nothing ...
     }
 }
 
 
-I2C::Message I2C::Message::write(std::initializer_list<uint8_t> tx_data) {
+I2C::Message I2C::Message::write(std::initializer_list<uint8_t> tx_data)
+{
     Message msg;
     msg.flags = 0;
     msg.data = std::vector<uint8_t>(tx_data);
@@ -69,7 +71,8 @@ I2C::Message I2C::Message::write(std::initializer_list<uint8_t> tx_data) {
 }
 
 
-I2C::Message I2C::Message::write(const std::vector<uint8_t>& tx_data) {
+I2C::Message I2C::Message::write(const std::vector<uint8_t>& tx_data)
+{
     Message msg;
     msg.flags = 0;
     msg.data = std::vector<uint8_t>(tx_data);
@@ -77,7 +80,8 @@ I2C::Message I2C::Message::write(const std::vector<uint8_t>& tx_data) {
 }
 
 
-I2C::Message I2C::Message::read(size_t len) {
+I2C::Message I2C::Message::read(size_t len)
+{
     Message msg;
     msg.flags = I2C_M_RD;
     msg.data = std::vector<uint8_t>(len);
@@ -117,7 +121,7 @@ void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
     i2c_rdwr_data.msgs = p.get();
     i2c_rdwr_data.nmsgs = count;
 
-    int error = ioctl(fd_, I2C_RDWR, &i2c_rdwr_data);
+    int error = ioctl(m_fd, I2C_RDWR, &i2c_rdwr_data);
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -126,7 +130,7 @@ void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
 
 std::string I2C::toString() const
 {
-    return "I2C (" + path_ + ")";
+    return "I2C (" + m_path + ")";
 }
 
 } // ... namespace periphery ...

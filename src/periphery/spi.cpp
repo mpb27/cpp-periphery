@@ -23,7 +23,8 @@
 namespace periphery {
 
 
-Spi::Spi(const std::string& path, Mode mode, BitOrder bit_order, uint32_t speed, uint8_t bits_per_word, uint8_t extra_flags) {
+Spi::Spi(const std::string& path, Mode mode, BitOrder bit_order, uint32_t speed, uint8_t bits_per_word, uint8_t extra_flags)
+{
     int error;
 
     // ... open device ...
@@ -67,7 +68,8 @@ Spi::Spi(const std::string& path, Mode mode, BitOrder bit_order, uint32_t speed)
     : Spi(path, mode, bit_order, speed, 8, 0) { }
 
 
-Spi::~Spi() {
+Spi::~Spi()
+{
     // ... we can report an error, but should never throw from destructor ...
     int error = close(m_fd);
     if (error < 0) {
@@ -76,7 +78,8 @@ Spi::~Spi() {
 }
 
 
-inline void ioctl_with_throw(int fd, unsigned long int request, void* ptr) {
+inline void ioctl_with_throw(int fd, unsigned long int request, void* ptr)
+{
     int error = ioctl(fd, request, ptr);
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
@@ -84,7 +87,8 @@ inline void ioctl_with_throw(int fd, unsigned long int request, void* ptr) {
 }
 
 template<typename T>
-inline T ioctl_get_wt(int fd, unsigned long int request) {
+inline T ioctl_get_wt(int fd, unsigned long int request)
+{
     static_assert(
         std::is_same<T, uint32_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, uint8_t>::value,
         "Must be 8, 16, or 32bit value.");
@@ -94,14 +98,16 @@ inline T ioctl_get_wt(int fd, unsigned long int request) {
 }
 
 template<typename T>
-inline void ioctl_set_wt(int fd, unsigned long int request, T value) {
+inline void ioctl_set_wt(int fd, unsigned long int request, T value)
+{
     static_assert(
         std::is_same<T, uint32_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, uint8_t>::value,
         "Must be 8, 16, or 32bit value.");
     ioctl_with_throw(fd, request, &value);
 }
 
-void Spi::mode(Spi::Mode mode) {
+void Spi::mode(Spi::Mode mode)
+{
     //uint8_t data8;
 
     // ... read the mode byte + other things ...
@@ -117,22 +123,26 @@ void Spi::mode(Spi::Mode mode) {
     ioctl_set_wt<uint8_t>(m_fd, SPI_IOC_WR_MODE, data8);
 }
 
-void Spi::bit_order(Spi::BitOrder bit_order) {
+void Spi::bit_order(Spi::BitOrder bit_order)
+{
     // ... the bits ...
     uint8_t data8 = (bit_order == BitOrder::LsbFirst) ? 1 : 0;
     // ... write the mode byte + other things ...
     ioctl_with_throw(m_fd, SPI_IOC_WR_LSB_FIRST, &data8);
 }
 
-void Spi::bits_per_word(uint8_t bits_per_word) {
+void Spi::bits_per_word(uint8_t bits_per_word)
+{
     ioctl_with_throw(m_fd, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word);
 }
 
-void Spi::speed(uint32_t speed) {
+void Spi::speed(uint32_t speed)
+{
     ioctl_with_throw(m_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
 }
 
-Spi::Mode Spi::mode() const {
+Spi::Mode Spi::mode() const
+{
     // ... read the mode byte + other things ...
     uint8_t data8;
     ioctl_with_throw(m_fd, SPI_IOC_RD_MODE, &data8);
@@ -141,7 +151,8 @@ Spi::Mode Spi::mode() const {
     return static_cast<Mode>(data8);
 }
 
-Spi::BitOrder Spi::bit_order() const {
+Spi::BitOrder Spi::bit_order() const
+{
     // ... read the bit order + other things ...
     uint8_t data8;
     ioctl_with_throw(m_fd, SPI_IOC_RD_LSB_FIRST, &data8);
@@ -149,21 +160,24 @@ Spi::BitOrder Spi::bit_order() const {
     return (data8 & SPI_LSB_FIRST) == 0 ? Spi::BitOrder::MsbFirst : Spi::BitOrder::LsbFirst;
 }
 
-uint32_t Spi::speed() const {
+uint32_t Spi::speed() const
+{
     //return ioctl_get_wt<uint32_t>(m_fd, SPI_IOC_RD_MAX_SPEED_HZ);
     uint32_t speed;
     ioctl_with_throw(m_fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
     return speed;
 }
 
-uint8_t Spi::bits_per_word() const {
+uint8_t Spi::bits_per_word() const
+{
     uint8_t bits_per_word;
     ioctl_with_throw(m_fd, SPI_IOC_RD_BITS_PER_WORD, &bits_per_word);
     return bits_per_word;
 }
 
 
-void Spi::transfer(const uint8_t* txbuf, uint8_t* rxbuf, size_t len) const {
+void Spi::transfer(const uint8_t* txbuf, uint8_t* rxbuf, size_t len) const
+{
     struct spi_ioc_transfer spi_xfer;
 
     /* Prepare SPI transfer structure */
@@ -181,7 +195,8 @@ void Spi::transfer(const uint8_t* txbuf, uint8_t* rxbuf, size_t len) const {
 }
 
 
-std::ostream& operator<<(std::ostream& stream, const Spi& spi) {
+std::ostream& operator<<(std::ostream& stream, const Spi& spi)
+{
     stream << "SPI (fd=" << spi.m_fd
            << ", mode=" << static_cast<int>(spi.mode())
            << ", speed=" << spi.speed()
@@ -190,5 +205,6 @@ std::ostream& operator<<(std::ostream& stream, const Spi& spi) {
            << ")";
     return stream;
 }
+
 
 } // ... namespace periphery ...

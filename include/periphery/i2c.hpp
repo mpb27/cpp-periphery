@@ -20,8 +20,9 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
-#include <system_error>
+#include <functional>
 #include <initializer_list>
+#include <system_error>
 #include <vector>
 
 namespace periphery {
@@ -64,8 +65,8 @@ public:
         friend class I2C;
     };
 private:
-    int fd_;
-    std::string path_;
+    int m_fd;
+    std::string m_path;
     template <typename ForwardIt>
     void transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const;
     void transfer(uint16_t addr, std::vector<std::reference_wrapper<Message>>& messages) const;
