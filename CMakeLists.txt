@@ -42,11 +42,12 @@ target_compile_features(periphery
             cxx_strong_enums
             cxx_variadic_templates
         PRIVATE
-            cxx_lambdas
+            cxx_auto_type
+            cxx_constexpr
             cxx_range_for
         )
 
-# Add alias
+# Add alias.
 add_library(periphery::periphery ALIAS periphery)
 
 # Test executables.
@@ -54,23 +55,19 @@ if (PERIPHERY_TESTS)
 
     # test-i2c
     add_executable(test-i2c src/test/test-i2c.cpp)
-    target_link_libraries(test-i2c PRIVATE periphery)
+    target_link_libraries(test-i2c PRIVATE periphery::periphery)
+
+    # test-spi
+    add_executable(test-spi src/test/test-spi.cpp)
+    target_link_libraries(test-spi PRIVATE periphery::periphery)
+
+    # test-mmio
+    add_executable(test-mmio src/test/test-mmio.cpp)
+    target_link_libraries(test-mmio PRIVATE periphery::periphery)
+
+    # test-serial
+    add_executable(test-serial src/test/test-serial.cpp)
+    target_link_libraries(test-serial PRIVATE periphery::periphery)
 
 endif()
-
-#add_executable(cpp_periphery
-#        include/periphery/i2c.hpp
-#        include/periphery/mmio.hpp
-#        include/periphery/periphery.hpp
-#        include/periphery/serial.hpp
-#        include/periphery/spi.hpp
-#        src/periphery/i2c.cpp
-#        src/periphery/mmio.cpp
-#        src/periphery/serial.cpp
-#        src/periphery/spi.cpp
-#        src/test/test-i2c.cpp
-#        src/test/test-mmio.cpp
-#        src/test/test-serial.cpp
-#        src/test/test-spi.cpp)
-
 

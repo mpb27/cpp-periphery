@@ -14,7 +14,6 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdlib.h>
 
 #include <sys/ioctl.h>
 #include <linux/i2c.h>
@@ -116,10 +115,7 @@ void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
     }
 
     // ... create transfer descriptor ...
-    i2c_rdwr_ioctl_data i2c_rdwr_data;
-    memset(&i2c_rdwr_data, 0, sizeof(i2c_rdwr_ioctl_data));
-    i2c_rdwr_data.msgs = p.get();
-    i2c_rdwr_data.nmsgs = count;
+    i2c_rdwr_ioctl_data i2c_rdwr_data { p.get(), count };
 
     int error = ioctl(m_fd, I2C_RDWR, &i2c_rdwr_data);
     if (error < 0) {

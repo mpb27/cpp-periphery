@@ -8,15 +8,15 @@
 
 int main()
 {
-    //unsigned char tmp[256];
+    using namespace periphery;
 
-    periphery::Spi spi("/dev/spi1.1",
-        periphery::Spi::Mode::Zero,
-        periphery::Spi::BitOrder::MsbFirst,
+    Spi spi("/dev/spi1.1",
+        Spi::Mode::Zero,
+        Spi::BitOrder::MsbFirst,
         1000000);
 
-    spi.mode(periphery::Spi::Mode::Three);
-    spi.bit_order(periphery::Spi::BitOrder::LsbFirst);
+    spi.mode(Spi::Mode::Three);
+    spi.bit_order(Spi::BitOrder::LsbFirst);
     spi.speed(250000);
     spi.bits_per_word(16);
 
