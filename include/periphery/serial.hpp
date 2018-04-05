@@ -14,7 +14,8 @@
 #include <chrono>
 #include <ostream>
 #include <string>
-#include <vector>
+
+#include <periphery/buffer.hpp>
 
 namespace periphery {
 
@@ -42,14 +43,18 @@ public:
     unsigned int input_waiting() const;
     unsigned int output_waiting() const;
 
-    int  write(const uint8_t* buf, size_t len) const;
-    void write_all(const uint8_t* buf, size_t len) const;
 
-    int  read(uint8_t* buf, size_t len) const;
-    int  read_timeout(uint8_t* buf, size_t len, std::chrono::milliseconds timeout) const;
+    void write(const_buffer buf) const;
 
-    //std::vector<uint8_t> read(size_t len) const;
-    std::vector<uint8_t> read(size_t len, std::chrono::milliseconds timeout) const;
+    void write(const std::string& data) const;
+
+
+    int  read     (mutable_buffer buf) const;
+    void read_all (mutable_buffer buf) const;
+    int  read_timeout     (mutable_buffer buf, std::chrono::milliseconds timeout) const;
+    int  read_all_timeout (mutable_buffer buf, std::chrono::milliseconds timeout) const;
+
+    //std::vector<uint8_t> read(size_t len, std::chrono::milliseconds timeout) const;
 
 private:
     int fd_;

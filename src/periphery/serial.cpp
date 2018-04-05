@@ -31,10 +31,11 @@ namespace periphery {
 
 
 // ... converts baudrate int to Bxxx flag value ...
-int baudrate_to_bits(uint32_t baudrate);
+speed_t baudrate_to_bits(uint32_t baudrate);
 
 
-Serial::Serial(const std::string& path, uint32_t baudrate, DataBits databits, Parity parity, StopBits stopbits, Handshake handshake) {
+Serial::Serial(const std::string& path, uint32_t baudrate, DataBits databits, Parity parity, StopBits stopbits, Handshake handshake)
+{
     //  setup the termios struture
     struct termios settings;
     memset(&settings, 0, sizeof(settings));
@@ -116,7 +117,8 @@ Serial::Serial(const std::string& path, uint32_t baudrate)
     : Serial(path, baudrate, DataBits::Eight, Parity::None, StopBits::One, Handshake::None) { }
 
 
-Serial::~Serial() {
+Serial::~Serial()
+{
     int error = close(fd_);
     if (error < 0) {
         // ... can't throw in destructor, maybe log an error? ...
@@ -124,7 +126,8 @@ Serial::~Serial() {
 
 }
 
-unsigned int Serial::input_waiting() const {
+unsigned int Serial::input_waiting() const
+{
     unsigned int count = 0;
     int error = ioctl(fd_, TIOCINQ, &count);
     if (error < 0) {
@@ -134,7 +137,8 @@ unsigned int Serial::input_waiting() const {
 }
 
 
-unsigned int Serial::output_waiting() const {
+unsigned int Serial::output_waiting() const
+{
     unsigned int count = 0;
     int error = ioctl(fd_, TIOCOUTQ, &count);
     if (error < 0) {
@@ -144,7 +148,8 @@ unsigned int Serial::output_waiting() const {
 }
 
 
-void Serial::flush() const {
+void Serial::flush() const
+{
     int error = tcdrain(fd_);
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
@@ -152,7 +157,8 @@ void Serial::flush() const {
 }
 
 
-bool Serial::poll(std::chrono::milliseconds timeout) const {
+bool Serial::poll(std::chrono::milliseconds timeout) const
+{
     struct pollfd fds[1];
 
     // ... poll ...
@@ -170,6 +176,7 @@ bool Serial::poll(std::chrono::milliseconds timeout) const {
 }
 
 
+/*
 int Serial::write(const uint8_t* buf, size_t len) const {
     ssize_t ret = ::write(fd_, buf, len);
     if (ret < 0) {
@@ -177,22 +184,25 @@ int Serial::write(const uint8_t* buf, size_t len) const {
     }
     return ret;
 }
+*/
 
-
-void Serial::write_all(const uint8_t* buf, size_t len) const {
-    while (len > 0) {
-        ssize_t ret = ::write(fd_, buf, len);
+void Serial::write(const_buffer buf) const
+{
+    while (buf.size() > 0) {
+        ssize_t ret = ::write(fd_, buf.data(), buf.size());
         if (ret < 0) {
             throw std::system_error(EFAULT, std::system_category());
         }
-        len -= ret;
+
+        // ... advance the buffer by the number of sent bytes ...
         buf += ret;
     }
 }
 
 
-int Serial::read(uint8_t* buf, size_t len) const {
-    ssize_t ret = ::read(fd_, buf, len);
+int Serial::read(mutable_buffer buf) const
+{
+    ssize_t ret = ::read(fd_, buf.data(), buf.size());
     if (ret < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -200,10 +210,58 @@ int Serial::read(uint8_t* buf, size_t len) const {
 }
 
 
-int Serial::read_timeout(uint8_t* buf, size_t len, std::chrono::milliseconds timeout) const {
+void Serial::read_all(mutable_buffer buf) const
+{
+    while (buf.size() > 0)
+    {
+        int bytesRead = this->read(buf);
+        buf += bytesRead;
+    }
+}
+
+
+int Serial::read_timeout(periphery::mutable_buffer buf, std::chrono::milliseconds timeout) const
+{
     ssize_t ret;
-    size_t bytes_left = len;
-    size_t bytes_read = 0;
+
+    // ... setup timeout ...
+    struct timeval tv;
+    tv.tv_sec = timeout.count() / 1000;
+    tv.tv_usec = (timeout.count() % 1000) * 1000;
+
+    // ... if there is a timeout, first make sure there are bytes available with a timeout that waits for
+    //     bytes to be available ...
+    if (timeout.count() >= 0) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(fd_, &rfds);
+
+        ret = ::select(fd_+1, &rfds, NULL, NULL, &tv);
+        if (ret < 0) {
+            throw std::system_error(EFAULT, std::system_category());
+        }
+
+        // ... timeout if ret is 0 ...
+        if (ret == 0) {
+            // ... timeout occurred ...
+            return 0;
+        }
+    }
+
+    // ... read what is available ...
+    ret = ::read(fd_, buf.data(), buf.size());
+    if (ret < 0) {
+        throw std::system_error(EFAULT, std::system_category());
+    }
+
+    return ret;
+}
+
+
+int Serial::read_all_timeout(periphery::mutable_buffer buf, std::chrono::milliseconds timeout) const
+{
+    ssize_t ret;
+    auto original_size = buf.size();
 
     // ... setup timeout ...
     struct timeval tv;
@@ -228,29 +286,29 @@ int Serial::read_timeout(uint8_t* buf, size_t len, std::chrono::milliseconds tim
             }
         }
 
-        ret = ::read(fd_, buf + bytes_read, bytes_left);
+        ret = ::read(fd_, buf.data(), buf.size());
         if (ret < 0) {
             throw std::system_error(EFAULT, std::system_category());
         }
 
-        bytes_read += ret;
-        bytes_left -= ret;
+        // ... advance the buffer by the number of received bytes ...
+        buf += ret;
 
-    } while (bytes_left > 0);
+    } while (buf.size() > 0);
 
-    return bytes_read;
+    return original_size - buf.size();
 }
 
-
+/*
 std::vector<uint8_t> Serial::read(size_t len, std::chrono::milliseconds timeout) const {
     std::vector<uint8_t> result(len);
     int read_length = read_timeout(result.data(), len, timeout);
     result.resize(read_length);
     return result;
 }
+*/
 
-
-int baudrate_to_bits(uint32_t baudrate) {
+speed_t baudrate_to_bits(uint32_t baudrate) {
     switch (baudrate) {
         case 50: return B50;
         case 75: return B75;

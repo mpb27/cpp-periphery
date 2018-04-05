@@ -9,7 +9,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.6)
 project(cpp-periphery)
 
 # Should set a global c++ standard, or use a per project standards, what are the ABI ramifications?
@@ -45,6 +45,7 @@ target_compile_features(periphery
             cxx_auto_type
             cxx_constexpr
             cxx_range_for
+            cxx_static_assert
         )
 
 # Add alias.

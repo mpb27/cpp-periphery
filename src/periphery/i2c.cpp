@@ -110,7 +110,7 @@ void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
         auto& m = (Message&) *first++;
         p[i].addr  = addr;
         p[i].flags = m.flags;
-        p[i].len   = m.data.size();
+        p[i].len   = (uint16_t) m.data.size();
         p[i].buf   = m.data.data();
     }
 
