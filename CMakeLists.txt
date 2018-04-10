@@ -27,7 +27,8 @@ add_library(periphery STATIC
         src/periphery/i2c.cpp
         src/periphery/mmio.cpp
         src/periphery/serial.cpp
-        src/periphery/spi.cpp)
+        src/periphery/spi.cpp
+        src/periphery/chardevice.cpp)
 
 #
 target_include_directories(periphery PUBLIC  include/)

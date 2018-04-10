@@ -27,6 +27,8 @@
 #include "periphery/serial.hpp"
 
 
+// TODO: Use CharacterDevice as a base class for serial instead of duplicating code.
+
 namespace periphery {
 
 
@@ -94,7 +96,7 @@ Serial::Serial(const std::string& path, uint32_t baudrate, DataBits databits, Pa
 
 
     // open
-    fd_ = open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    fd_ = ::open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd_ < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -103,7 +105,7 @@ Serial::Serial(const std::string& path, uint32_t baudrate, DataBits databits, Pa
     int error = tcsetattr(fd_, TCSANOW, &settings);
     if (error < 0) {
         auto e = std::system_error(EFAULT, std::system_category());
-        close(fd_);
+        ::close(fd_);
         throw e;
     }
 }
@@ -119,7 +121,7 @@ Serial::Serial(const std::string& path, uint32_t baudrate)
 
 Serial::~Serial()
 {
-    int error = close(fd_);
+    int error = ::close(fd_);
     if (error < 0) {
         // ... can't throw in destructor, maybe log an error? ...
     }
@@ -129,7 +131,7 @@ Serial::~Serial()
 unsigned int Serial::input_waiting() const
 {
     unsigned int count = 0;
-    int error = ioctl(fd_, TIOCINQ, &count);
+    int error = ::ioctl(fd_, TIOCINQ, &count);
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -140,7 +142,7 @@ unsigned int Serial::input_waiting() const
 unsigned int Serial::output_waiting() const
 {
     unsigned int count = 0;
-    int error = ioctl(fd_, TIOCOUTQ, &count);
+    int error = ::ioctl(fd_, TIOCOUTQ, &count);
     if (error < 0) {
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -236,6 +238,7 @@ int Serial::read_timeout(periphery::mutable_buffer buf, std::chrono::millisecond
         FD_ZERO(&rfds);
         FD_SET(fd_, &rfds);
 
+        // TODO: Consider using poll() since we are waiting on only one file descriptor and poll takes milliseconds directly.
         ret = ::select(fd_+1, &rfds, NULL, NULL, &tv);
         if (ret < 0) {
             throw std::system_error(EFAULT, std::system_category());
