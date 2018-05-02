@@ -34,22 +34,22 @@ public:
     Mmio& operator=(const Mmio&) = delete;
 
     // ... reads ...
-    uint32_t read32(size_t offset) const { return read<uint32_t>(offset); }
-    uint16_t read16(size_t offset) const { return read<uint16_t>(offset); }
-    uint8_t  read8 (size_t offset) const { return read<uint8_t >(offset); }
+    uint32_t read32(size_t offset) const;
+    uint16_t read16(size_t offset) const;
+    uint8_t  read8 (size_t offset) const;
     void     read(size_t offset, uint8_t* buf, size_t len) const;
     // ... writes ...
-    void     write32(size_t offset, uint32_t value) const { write<uint32_t>(offset, value); }
-    void     write16(size_t offset, uint16_t value) const  { write<uint16_t>(offset, value); }
-    void     write8(size_t offset, uint8_t value) const  { write<uint8_t>(offset, value); }
+    void     write32(size_t offset, uint32_t value) const;
+    void     write16(size_t offset, uint16_t value) const;
+    void     write8(size_t offset, uint8_t value) const;
     void     write(size_t offset, const uint8_t* buf, size_t len) const;
     // ... clear and set (non-atomic) ...
-    void     clear32(size_t offset, uint32_t mask) const { write32(offset, read32(offset) & ~mask); }
-    void     clear16(size_t offset, uint16_t mask) const { write16(offset, read16(offset) & ~mask); }
-    void     clear8 (size_t offset, uint8_t  mask) const { write8(offset, read8(offset) & ~mask); }
-    void     set32(size_t offset, uint32_t mask) const { write32(offset, read32(offset) | mask); }
-    void     set16(size_t offset, uint16_t mask) const { write16(offset, read16(offset) | mask); }
-    void     set8 (size_t offset, uint8_t  mask) const { write8(offset, read8(offset) | mask); }
+    void     clear32(size_t offset, uint32_t mask) const;
+    void     clear16(size_t offset, uint16_t mask) const;
+    void     clear8 (size_t offset, uint8_t  mask) const;
+    void     set32(size_t offset, uint32_t mask) const;
+    void     set16(size_t offset, uint16_t mask) const;
+    void     set8 (size_t offset, uint8_t  mask) const;
 
     // ... pointer, should not be used after Mmio is destroyed, ensure using? ...
     void* ptr() const { return static_cast<void*>(m_ptr + (m_base - m_aligned_base)); }

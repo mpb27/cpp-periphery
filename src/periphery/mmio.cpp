@@ -50,6 +50,22 @@ namespace periphery {
         }
     }
 
+    uint32_t Mmio::read32(size_t offset) const { return read<uint32_t>(offset); }
+    uint16_t Mmio::read16(size_t offset) const { return read<uint16_t>(offset); }
+    uint8_t  Mmio::read8(size_t offset)  const { return read<uint8_t >(offset); }
+
+    void Mmio::write32(size_t offset, uint32_t value) const { write<uint32_t>(offset, value); }
+    void Mmio::write16(size_t offset, uint16_t value) const { write<uint16_t>(offset, value); }
+    void Mmio::write8 (size_t offset, uint8_t value)  const { write<uint8_t>(offset, value); }
+
+    void Mmio::clear32(size_t offset, uint32_t mask) const { write32(offset, read32(offset) & ~mask); }
+    void Mmio::clear16(size_t offset, uint16_t mask) const { write16(offset, read16(offset) & ~mask); }
+    void Mmio::clear8 (size_t offset, uint8_t mask)  const { write8(offset, read8(offset) & ~mask); }
+
+    void Mmio::set32(size_t offset, uint32_t mask) const { write32(offset, read32(offset) | mask); }
+    void Mmio::set16(size_t offset, uint16_t mask) const { write16(offset, read16(offset) | mask); }
+    void Mmio::set8 (size_t offset, uint8_t mask)  const { write8(offset, read8(offset) | mask); }
+
     template<typename T> inline T Mmio::read(size_t offset) const {
         offset += (m_base - m_aligned_base);
         if ((offset + sizeof(T)) > m_aligned_size) {
