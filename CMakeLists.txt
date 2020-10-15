@@ -28,7 +28,8 @@ add_library(periphery STATIC
         src/periphery/mmio.cpp
         src/periphery/serial.cpp
         src/periphery/spi.cpp
-        src/periphery/chardevice.cpp)
+        src/periphery/chardevice.cpp
+        src/periphery/gpio.cpp)
 
 #
 target_include_directories(periphery PUBLIC  include/)

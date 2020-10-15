@@ -104,7 +104,7 @@ template <typename ForwardIt>
 void I2C::transfer_impl(uint16_t addr, ForwardIt first, ForwardIt last) const
 {
     // ... create i2c_msg structure needed by linux call ...
-    size_t count = last - first;
+    unsigned int count = last - first;
     std::unique_ptr<i2c_msg[]> p(new i2c_msg[count]);
     for (size_t i = 0 ; i < count; ++i) {
         auto& m = (Message&) *first++;
