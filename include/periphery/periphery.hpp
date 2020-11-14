@@ -8,6 +8,8 @@
  * <a href="GitHub"> https://github.com/mpb27/cpp-periphery </a>
  */
 
+#ifndef PERIPHERY_H
+#define PERIPHERY_H
 
 #include <stdexcept>
 
@@ -20,3 +22,5 @@ namespace periphery {
     };
 
 }
+
+#endif // PERIPHERY_H
